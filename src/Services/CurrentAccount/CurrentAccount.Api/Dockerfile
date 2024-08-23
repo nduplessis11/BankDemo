@@ -27,4 +27,8 @@ RUN dotnet publish "./CurrentAccount.Api.csproj" -c $BUILD_CONFIGURATION -o /app
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Set the ASP.NET Core environment to Development
+ENV ASPNETCORE_ENVIRONMENT=Development
+
 ENTRYPOINT ["dotnet", "CurrentAccount.Api.dll"]
