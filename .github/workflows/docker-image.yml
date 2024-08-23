@@ -92,3 +92,5 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           images: '${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }}'
+          env: |
+            ASPNETCORE_ENVIRONMENT=Development
