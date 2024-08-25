@@ -23,24 +23,12 @@ app.MapPost("/CurrentAccount/Initiate", () => "Stub!")
     .WithName("CurrentAccountInitiate")
     .WithOpenApi();
 
-
-
-// This example assumes you want to open the connection as part of an endpoint:
+// Test database connection:
 app.MapGet("/test-connection", async () =>
 {
-    // Use system-assigned identity by default
+    // Use system-assigned identity
     var sqlServerTokenProvider = new DefaultAzureCredential();
 
-    // Uncomment this section and comment the line above if using user-assigned identity
-    /*
-    var sqlServerTokenProvider = new DefaultAzureCredential(
-        new DefaultAzureCredentialOptions
-        {
-            ManagedIdentityClientId = Environment.GetEnvironmentVariable("AZURE_POSTGRESQL_CLIENTID")
-        });
-    */
-
-    // Acquire the access token
     AccessToken accessToken = await sqlServerTokenProvider.GetTokenAsync(
         new TokenRequestContext(scopes: new string[]
         {
@@ -51,19 +39,14 @@ app.MapGet("/test-connection", async () =>
     string connectionString =
         $"{Environment.GetEnvironmentVariable("AZURE_POSTGRESQL_CONNECTIONSTRING")};Password={accessToken.Token}";
 
-    // Establish the connection
     using (var connection = new NpgsqlConnection(connectionString))
     {
-        Console.WriteLine("Opening connection using access token...");
         await connection.OpenAsync();
-        
-        // Here you can perform database operations
-        // Example: return a success message
+
         return Results.Ok("Database connection successful!");
     }
 })
 .WithName("TestConnection")
 .WithOpenApi();
-
 
 app.Run();
