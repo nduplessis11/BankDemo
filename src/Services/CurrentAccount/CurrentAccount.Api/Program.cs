@@ -32,9 +32,13 @@ app.MapPost("/CurrentAccount/Initiate", () => "Stub!")
 // Test database connection:
 app.MapGet("/test-connection", async (IConfiguration config, HttpContext context) =>
 {
-    var env = context.RequestServices.GetRequiredService<IHostEnvironment>();
+    // If using containerized database (local typically), don't connect to app services database
+    if (Environment.GetEnvironmentVariable("DOCKER_DB_CONTAINER") == "TRUE")
+    {
+        var dockerConnectionString = config.GetConnectionString("DockerDb");
+        return Results.Ok("Using docker db container!");
+    }
 
-    // Use system-assigned identity
     var sqlServerTokenProvider = new DefaultAzureCredential();
 
     AccessToken accessToken = await sqlServerTokenProvider.GetTokenAsync(
@@ -43,6 +47,8 @@ app.MapGet("/test-connection", async (IConfiguration config, HttpContext context
             "https://ossrdbms-aad.database.windows.net/.default"
         ]));
 
+    // If local get connection string from user secrets, otherwise use system-assigned identity in App Services
+    var env = context.RequestServices.GetRequiredService<IHostEnvironment>();
     string connectionString = env.IsLocal()
         ? $"{config["AZURE_POSTGRESQL_CONNECTIONSTRING"]};Password={accessToken.Token}"
         : $"{Environment.GetEnvironmentVariable("AZURE_POSTGRESQL_CONNECTIONSTRING")};Password={accessToken.Token}";

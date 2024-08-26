@@ -1,0 +1,12 @@
+services:
+  currentaccount_db:
+    image: postgres
+
+  currentaccount.api:
+    image: ${DOCKER_REGISTRY-}currentaccountapi
+    build:
+      context: .
+      dockerfile: Services/CurrentAccount/CurrentAccount.Api/Dockerfile
+
+volumes:
+  postgres_currentaccount:
