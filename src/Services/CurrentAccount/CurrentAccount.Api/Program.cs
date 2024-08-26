@@ -30,27 +30,27 @@ app.MapPost("/CurrentAccount/Initiate", () => "Stub!")
     .WithOpenApi();
 
 // Test database connection:
-app.MapGet("/test-connection", async () =>
+app.MapGet("/test-connection", async (IConfiguration config, HttpContext context) =>
 {
+    var env = context.RequestServices.GetRequiredService<IHostEnvironment>();
+
     // Use system-assigned identity
     var sqlServerTokenProvider = new DefaultAzureCredential();
 
     AccessToken accessToken = await sqlServerTokenProvider.GetTokenAsync(
-        new TokenRequestContext(scopes: new string[]
-        {
+        new TokenRequestContext(scopes:
+        [
             "https://ossrdbms-aad.database.windows.net/.default"
-        }));
+        ]));
 
-    // Combine the token with the connection string from the environment variables provided by Service Connector
-    string connectionString =
-        $"{Environment.GetEnvironmentVariable("AZURE_POSTGRESQL_CONNECTIONSTRING")};Password={accessToken.Token}";
+    string connectionString = env.IsLocal()
+        ? $"{config["AZURE_POSTGRESQL_CONNECTIONSTRING"]};Password={accessToken.Token}"
+        : $"{Environment.GetEnvironmentVariable("AZURE_POSTGRESQL_CONNECTIONSTRING")};Password={accessToken.Token}";
 
-    using (var connection = new NpgsqlConnection(connectionString))
-    {
-        await connection.OpenAsync();
+    using var connection = new NpgsqlConnection(connectionString);
+    await connection.OpenAsync();
 
-        return Results.Ok("Database connection successful!");
-    }
+    return Results.Ok("Database connection successful!");
 })
 .WithName("TestConnection")
 .WithOpenApi();
