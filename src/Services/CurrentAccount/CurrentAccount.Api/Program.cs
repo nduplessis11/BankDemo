@@ -1,8 +1,14 @@
 using Azure.Core;
 using Azure.Identity;
+using CurrentAccount.Api;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsLocal())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
@@ -11,7 +17,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopmentOrLocal())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
